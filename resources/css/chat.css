@@ -1,13 +1,487 @@
-.laravel-chat-shell {
-    max-width: 960px;
-    margin: 2rem auto;
-    font-family: sans-serif;
-    padding: 1.5rem;
-    border-radius: 12px;
-    border: 1px solid #dbe4ee;
-    background: #f8fafc;
+.lc-page {
+    margin: 0;
+    min-height: 100vh;
+    background: #f1f5f9;
+    color: #172033;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
-.laravel-chat-shell h1 {
-    margin-bottom: 0.5rem;
+.lc-chat-page {
+    box-sizing: border-box;
+    max-width: 1440px;
+    min-height: 100vh;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.lc-page-header,
+.lc-section-heading,
+.lc-thread-header,
+.lc-notification-panel-header,
+.lc-notification-panel-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.lc-page-header {
+    margin-bottom: 1.5rem;
+}
+
+.lc-page-header h1,
+.lc-thread-header h2,
+.lc-notification-panel-header h2 {
+    margin: 0;
+    color: #172033;
+}
+
+.lc-page-header h1 {
+    font-size: 1.75rem;
+}
+
+.lc-eyebrow {
+    margin: 0 0 0.3rem;
+    color: #64748b;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.11em;
+}
+
+.lc-connection-state {
+    color: #64748b;
+    font-size: 0.82rem;
+}
+
+.lc-chat-layout {
+    display: grid;
+    grid-template-columns: minmax(250px, 340px) minmax(0, 1fr);
+    min-height: min(72vh, 760px);
+    overflow: hidden;
+    border: 1px solid #dbe3ee;
+    border-radius: 1rem;
+    background: #fff;
+    box-shadow: 0 16px 40px rgb(15 23 42 / 7%);
+}
+
+.lc-conversation-sidebar {
+    border-right: 1px solid #e2e8f0;
+    background: #fbfdff;
+}
+
+.lc-section-heading,
+.lc-thread-header {
+    min-height: 4.5rem;
+    padding: 0 1.25rem;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.lc-section-heading h2 {
+    margin: 0;
+    font-size: 1rem;
+}
+
+.lc-section-heading > span {
+    min-width: 1.65rem;
+    padding: 0.15rem 0.4rem;
+    border-radius: 999px;
+    background: #e8eef7;
+    color: #40516b;
+    font-size: 0.75rem;
+    text-align: center;
+}
+
+.lc-conversation-list,
+.lc-notification-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.lc-conversation-item {
+    border-bottom: 1px solid #edf1f6;
+}
+
+.lc-conversation-button {
+    display: grid;
+    width: 100%;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.25rem 0.75rem;
+    padding: 1rem 1.25rem;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    text-align: left;
+}
+
+.lc-conversation-button:hover,
+.lc-conversation-button[aria-current="true"] {
+    background: #edf4ff;
+}
+
+.lc-conversation-title {
+    overflow: hidden;
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.lc-conversation-preview {
+    overflow: hidden;
+    grid-column: 1 / -1;
+    color: #64748b;
+    font-size: 0.8rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.lc-conversation-unread,
+.lc-unread-badge {
+    display: inline-grid;
+    min-width: 1.4rem;
+    height: 1.4rem;
+    place-items: center;
+    padding: 0 0.35rem;
+    border-radius: 999px;
+    background: #dc2626;
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 700;
+}
+
+.lc-conversation-unread[hidden],
+.lc-unread-badge[hidden],
+.lc-notification-panel[hidden],
+[hidden] {
+    display: none !important;
+}
+
+.lc-thread {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+}
+
+.lc-thread-header h2 {
+    font-size: 1rem;
+}
+
+.lc-message-list {
+    display: flex;
+    min-height: 250px;
+    flex: 1;
+    flex-direction: column;
+    gap: 0.75rem;
+    overflow-y: auto;
+    padding: 1.25rem;
+}
+
+.lc-message {
+    max-width: min(75%, 620px);
+    align-self: flex-start;
+    padding: 0.75rem 0.9rem;
+    border-radius: 0.9rem 0.9rem 0.9rem 0.2rem;
+    background: #f1f5f9;
+    overflow-wrap: anywhere;
+}
+
+.lc-message.is-own {
+    align-self: flex-end;
+    border-radius: 0.9rem 0.9rem 0.2rem 0.9rem;
+    background: #2563eb;
+    color: #fff;
+}
+
+.lc-message-author,
+.lc-message-time {
+    display: block;
+    margin-bottom: 0.25rem;
+    color: #64748b;
+    font-size: 0.7rem;
+}
+
+.lc-message.is-own .lc-message-author,
+.lc-message.is-own .lc-message-time {
+    color: #dbeafe;
+}
+
+.lc-message-body {
+    margin: 0;
+    white-space: pre-wrap;
+}
+
+.lc-thread-placeholder,
+.lc-empty-list {
+    margin: auto;
+    padding: 1rem;
+    color: #64748b;
+    text-align: center;
+}
+
+.lc-compose-form {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.6rem;
+    padding: 1rem 1.25rem;
+    border-top: 1px solid #e2e8f0;
+}
+
+.lc-compose-form textarea {
+    box-sizing: border-box;
+    width: 100%;
+    resize: vertical;
+    padding: 0.7rem 0.8rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 0.6rem;
+    font: inherit;
+}
+
+.lc-compose-form button,
+.lc-sound-toggle,
+.lc-open-messages {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.5rem;
+    padding: 0.55rem 0.9rem;
+    border: 0;
+    border-radius: 0.55rem;
+    background: #1d4ed8;
+    color: #fff;
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.82rem;
+    font-weight: 650;
+    text-decoration: none;
+}
+
+.lc-compose-form button:disabled {
+    background: #94a3b8;
+    cursor: not-allowed;
+}
+
+.lc-form-error {
+    grid-column: 1 / -1;
+    margin: 0;
+    color: #b91c1c;
+    font-size: 0.82rem;
+}
+
+.lc-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    clip-path: inset(50%);
+}
+
+.lc-notification-widget {
+    position: fixed;
+    z-index: 1080;
+    right: 1.5rem;
+    bottom: 1.5rem;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.lc-bell-trigger {
+    position: relative;
+    display: grid;
+    width: 3.5rem;
+    height: 3.5rem;
+    place-items: center;
+    border: 0;
+    border-radius: 50%;
+    background: #1d4ed8;
+    box-shadow: 0 8px 22px rgb(15 23 42 / 28%);
+    color: #fff;
+    cursor: grab;
+    touch-action: none;
+}
+
+.lc-bell-trigger:active {
+    cursor: grabbing;
+}
+
+.lc-bell-trigger svg {
+    width: 1.45rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.8;
+}
+
+.lc-unread-badge {
+    position: absolute;
+    top: -0.3rem;
+    right: -0.4rem;
+    min-width: 1.3rem;
+    height: 1.3rem;
+    border: 2px solid #fff;
+}
+
+.lc-sidebar-unread {
+    display: inline-block;
+    min-width: 1.2rem;
+    margin-left: auto;
+    padding: 0.08rem 0.35rem;
+    border-radius: 999px;
+    background: #dc2626;
+    color: #fff;
+    font-size: 0.68rem;
+    font-weight: 700;
+    line-height: 1.4;
+    text-align: center;
+}
+
+.lc-notification-panel {
+    position: absolute;
+    right: 0;
+    bottom: calc(100% + 0.75rem);
+    width: min(22rem, calc(100vw - 2rem));
+    max-height: min(70vh, 34rem);
+    overflow-y: auto;
+    border: 1px solid #dbe3ee;
+    border-radius: 0.9rem;
+    background: #fff;
+    box-shadow: 0 18px 50px rgb(15 23 42 / 22%);
+    color: #172033;
+}
+
+.lc-notification-widget.is-panel-below .lc-notification-panel {
+    top: calc(100% + 0.75rem);
+    bottom: auto;
+}
+
+.lc-notification-panel-header,
+.lc-notification-panel-footer {
+    gap: 0.75rem;
+    padding: 0.9rem 1rem;
+}
+
+.lc-notification-panel-header {
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.lc-notification-panel-header h2 {
+    font-size: 1rem;
+}
+
+.lc-panel-close {
+    border: 0;
+    background: transparent;
+    color: #64748b;
+    cursor: pointer;
+    font-size: 1.5rem;
+}
+
+.lc-notification-empty {
+    margin: 0;
+    padding: 1rem;
+    color: #64748b;
+    font-size: 0.85rem;
+}
+
+.lc-notification-item {
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid #edf1f6;
+}
+
+.lc-notification-item a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.lc-notification-item a:hover {
+    color: #1d4ed8;
+}
+
+.lc-notification-item strong,
+.lc-notification-item span {
+    display: block;
+}
+
+.lc-notification-item span {
+    margin-top: 0.2rem;
+    color: #64748b;
+    font-size: 0.8rem;
+}
+
+.lc-notification-panel-footer {
+    border-top: 1px solid #e2e8f0;
+}
+
+.lc-sound-toggle {
+    border: 1px solid #cbd5e1;
+    background: #fff;
+    color: #334155;
+}
+
+.lc-open-messages {
+    white-space: nowrap;
+}
+
+.lc-toast-stack {
+    position: absolute;
+    right: 0;
+    bottom: calc(100% + 0.8rem);
+    display: grid;
+    width: min(23rem, calc(100vw - 2rem));
+    gap: 0.5rem;
+    pointer-events: none;
+}
+
+.lc-toast {
+    padding: 0.9rem 1rem;
+    border: 1px solid #cbd5e1;
+    border-left: 4px solid #2563eb;
+    border-radius: 0.7rem;
+    background: #fff;
+    box-shadow: 0 8px 24px rgb(15 23 42 / 16%);
+    color: #172033;
+    pointer-events: auto;
+}
+
+.lc-toast a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.lc-toast strong,
+.lc-toast span {
+    display: block;
+}
+
+.lc-toast span {
+    margin-top: 0.25rem;
+    color: #475569;
+    font-size: 0.82rem;
+}
+
+@media (max-width: 760px) {
+    .lc-chat-page {
+        padding: 1rem;
+    }
+
+    .lc-chat-layout {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .lc-conversation-sidebar {
+        max-height: 35vh;
+        overflow-y: auto;
+        border-right: 0;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .lc-thread {
+        min-height: 55vh;
+    }
+
+    .lc-message {
+        max-width: 88%;
+    }
 }

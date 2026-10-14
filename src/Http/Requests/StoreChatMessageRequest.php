@@ -17,7 +17,6 @@ class StoreChatMessageRequest extends FormRequest
             'conversation_id' => ['required', 'integer'],
             'body' => ['nullable', 'string', 'max:10000'],
             'type' => ['nullable', 'in:text,image,file'],
-            'attachments' => ['nullable', 'array'],
         ];
     }
 }
