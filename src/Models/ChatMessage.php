@@ -24,7 +24,10 @@ class ChatMessage extends Model
 
     public function author(): BelongsTo
     {
-        $userModel = config('chat.auth.user_model', config('auth.providers.users.model', \App\Models\User::class));
+        $userModel = config('chat.auth.user_model', config('auth.providers.users.model'));
+        if (! is_string($userModel) || ! class_exists($userModel)) {
+            throw new \RuntimeException('Configure chat.auth.user_model with the application user model.');
+        }
 
         return $this->belongsTo($userModel, 'user_id');
     }

@@ -26,7 +26,9 @@ class ChatController extends Controller
             ->where('user_id', $userId)
             ->with('conversation.latestMessage.author')
             ->withCount('unreadMessages')
-            ->get();
+            ->get()
+            ->sortBy(fn (ChatParticipant $participant) => $participant->conversation->type === 'notes' ? 0 : 1)
+            ->values();
 
         return response()->json($participants
             ->map(fn (ChatParticipant $participant) => $this->conversationSummary($participant))
@@ -45,7 +47,9 @@ class ChatController extends Controller
             ->where('user_id', $userId)
             ->with('conversation.latestMessage.author')
             ->withCount('unreadMessages')
-            ->get();
+            ->get()
+            ->sortBy(fn (ChatParticipant $participant) => $participant->conversation->type === 'notes' ? 0 : 1)
+            ->values();
         $conversationIds = $participants->pluck('conversation_id');
         $conversations = $participants
             ->map(fn (ChatParticipant $participant) => $this->conversationSummary($participant))
@@ -122,14 +126,21 @@ class ChatController extends Controller
 
     public function stylesheet(): BinaryFileResponse
     {
-        return response()->file(dirname(__DIR__, 3) . '/resources/css/chat.css', [
+        return response()->file(dirname(__DIR__, 3).'/resources/css/chat.css', [
             'Content-Type' => 'text/css; charset=UTF-8',
         ]);
     }
 
     public function script(): BinaryFileResponse
     {
-        return response()->file(dirname(__DIR__, 3) . '/resources/js/chat.js', [
+        return response()->file(dirname(__DIR__, 3).'/resources/js/chat.js', [
+            'Content-Type' => 'application/javascript; charset=UTF-8',
+        ]);
+    }
+
+    public function workspaceScript(): BinaryFileResponse
+    {
+        return response()->file(dirname(__DIR__, 3).'/resources/js/chat-workspace.js', [
             'Content-Type' => 'application/javascript; charset=UTF-8',
         ]);
     }
@@ -143,6 +154,7 @@ class ChatController extends Controller
             'id' => $conversation->id,
             'subject' => $conversation->subject,
             'type' => $conversation->type,
+            'current_user_role' => $participant->role,
             'unread_count' => $participant->unread_messages_count,
             'latest_message' => $latestMessage ? [
                 'body' => $latestMessage->body,

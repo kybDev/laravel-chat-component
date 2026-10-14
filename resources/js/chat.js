@@ -315,6 +315,8 @@
             const unread = document.createElement('span');
             const preview = document.createElement('span');
             item.className = 'lc-conversation-item';
+            item.dataset.conversationId = String(conversation.id);
+            item.dataset.conversationType = conversation.type;
             button.type = 'button';
             button.className = 'lc-conversation-button';
             button.setAttribute('aria-current', String(String(conversation.id) === String(selectedId)));
@@ -365,7 +367,15 @@
     const openConversation = async (conversationId) => {
         selectedId = String(conversationId);
         renderConversations();
-        threadTitle.textContent = conversations.find((item) => String(item.id) === selectedId)?.subject
+        const conversation = conversations.find((item) => String(item.id) === selectedId);
+        document.dispatchEvent(new CustomEvent('laravel-chat:conversation-opened', {
+            detail: {
+                id: selectedId,
+                type: conversation?.type || 'direct',
+                role: conversation?.current_user_role || 'member',
+            },
+        }));
+        threadTitle.textContent = conversation?.subject
             || `Conversation #${conversationId}`;
         input.disabled = false;
         sendButton.disabled = false;
@@ -374,7 +384,6 @@
         try {
             const messages = await requestJson(url);
             renderMessages(messages);
-            const conversation = conversations.find((item) => String(item.id) === selectedId);
             if (conversation) {
                 conversation.unread_count = 0;
                 renderConversations();

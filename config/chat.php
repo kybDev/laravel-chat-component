@@ -13,12 +13,16 @@ return [
         'mode' => env('CHAT_AUTH_MODE', 'auto'),
         'guard' => env('CHAT_AUTH_GUARD', 'web'),
         'resolver' => env('CHAT_AUTH_RESOLVER', Vendor\LaravelChat\Support\DefaultChatUserResolver::class),
-        'user_model' => env('CHAT_USER_MODEL', config('auth.providers.users.model', App\Models\User::class)),
+        'user_model' => env('CHAT_USER_MODEL', config('auth.providers.users.model')),
     ],
 
     'routes' => [
         'prefix' => env('CHAT_ROUTE_PREFIX', 'messages'),
-        'middleware' => array_filter(array_map('trim', explode(',', env('CHAT_ROUTE_MIDDLEWARE', 'web,auth')))),
+        'middleware' => [
+            'web',
+            'auth',
+            \Vendor\LaravelChat\Http\Middleware\EnsureAuthenticatedChatUser::class,
+        ],
     ],
 
     'storage' => [

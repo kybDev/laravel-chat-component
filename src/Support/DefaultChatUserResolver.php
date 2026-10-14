@@ -43,8 +43,18 @@ class DefaultChatUserResolver implements ChatUserResolver
 
     protected function resolveUserModel(): mixed
     {
-        $class = config('chat.auth.user_model', config('auth.providers.users.model', \App\Models\User::class));
+        $class = config('chat.auth.user_model', config('auth.providers.users.model'));
 
-        return class_exists($class) ? new $class() : null;
+        if (! is_string($class) || ! class_exists($class)) {
+            throw new \RuntimeException('Configure chat.auth.user_model with the application user model.');
+        }
+
+        $model = new $class;
+        if (! $model instanceof \Illuminate\Database\Eloquent\Model
+            || ! $model instanceof \Illuminate\Contracts\Auth\Authenticatable) {
+            throw new \RuntimeException('The configured chat user model must be an authenticatable Eloquent model.');
+        }
+
+        return $model;
     }
 }

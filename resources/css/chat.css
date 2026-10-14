@@ -278,6 +278,75 @@
     clip-path: inset(50%);
 }
 
+.lc-workspace-tools {
+    padding: 1rem;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.lc-workspace-tools h3 {
+    margin: 0 0 .65rem;
+    font-size: .95rem;
+}
+
+.lc-workspace-tools input,
+.lc-workspace-tools button {
+    box-sizing: border-box;
+    width: 100%;
+    margin: .25rem 0;
+    padding: .6rem;
+    border: 1px solid #cbd5e1;
+    border-radius: .4rem;
+    font: inherit;
+}
+
+.lc-workspace-tools button {
+    background: #1d4ed8;
+    color: #fff;
+    cursor: pointer;
+}
+
+.lc-workspace-tools button:disabled {
+    cursor: not-allowed;
+    opacity: .55;
+}
+
+.lc-user-results {
+    max-height: 12rem;
+    overflow-y: auto;
+    margin: .35rem 0 .75rem;
+    padding: 0;
+    list-style: none;
+}
+
+.lc-user-results li {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .35rem 0;
+}
+
+.lc-user-results label {
+    flex: 1;
+    overflow-wrap: anywhere;
+}
+
+.lc-user-results button {
+    width: auto;
+    margin: 0;
+    padding: .35rem .6rem;
+}
+
+.lc-workspace-status {
+    margin: .4rem 0;
+    color: #475569;
+    font-size: .8rem;
+}
+
+.lc-workspace-status:empty,
+.lc-workspace-group-actions[hidden] {
+    display: none;
+}
+
 .lc-notification-widget {
     position: fixed;
     z-index: 1080;

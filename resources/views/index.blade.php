@@ -15,6 +15,11 @@
         data-messages-url="{{ route('chat.messages', ['conversation' => '__ID__']) }}"
         data-store-url="{{ route('chat.store') }}"
         data-user-id="{{ auth()->user()->getAuthIdentifier() }}"
+        data-user-search-url="{{ route('chat.workspace.users') }}"
+        data-direct-url="{{ route('chat.workspace.direct') }}"
+        data-group-url="{{ route('chat.workspace.groups') }}"
+        data-group-members-url="{{ route('chat.workspace.groups.members', ['conversation' => '__ID__']) }}"
+        data-group-members-info-url="{{ route('chat.workspace.groups.members.index', ['conversation' => '__ID__']) }}"
     >
         <header class="lc-page-header">
             <div>
@@ -26,6 +31,27 @@
 
         <section class="lc-chat-layout" aria-label="Chat">
             <aside class="lc-conversation-sidebar">
+                <div class="lc-workspace-tools">
+                    <h3>Find people</h3>
+                    <label class="lc-sr-only" for="lc-user-search">Search users</label>
+                    <input id="lc-user-search" type="search" minlength="2" maxlength="100"
+                        placeholder="Search by name or email">
+                    <p class="lc-workspace-status" id="lc-search-status" role="status"></p>
+                    <ul class="lc-user-results" id="lc-user-results"></ul>
+
+                    <form id="lc-create-group-form">
+                        <h3>Create a group</h3>
+                        <label class="lc-sr-only" for="lc-group-name">Group name</label>
+                        <input id="lc-group-name" name="name" maxlength="255" required placeholder="Group name">
+                        <button type="submit" id="lc-create-group-button" disabled>Create group with selected users</button>
+                    </form>
+
+                    <div class="lc-workspace-group-actions" id="lc-group-member-actions" hidden>
+                        <button type="button" id="lc-add-group-members" disabled>Add selected users to this group</button>
+                    </div>
+                    <p class="lc-workspace-status" id="lc-workspace-status" role="status"></p>
+                </div>
+
                 <div class="lc-section-heading">
                     <h2>Conversations</h2>
                     <span id="lc-conversation-count">0</span>
@@ -60,5 +86,6 @@
     </main>
 
     @include('laravel-chat::components.notification-widget')
+    <script src="{{ route('chat.assets.workspace.js') }}" defer></script>
 </body>
 </html>

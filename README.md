@@ -1,6 +1,6 @@
 # Laravel Chat Component
 
-`kybdev/laravel-chat-component` is a Laravel 11 package that provides a basic chat page, participant-scoped conversation and message endpoints, unread counts, and a draggable notification bell. It includes migrations, Eloquent models, web and API routes, and a configurable chat-user resolver.
+`kybdev/laravel-chat-component` is a Laravel 11 package that provides user search, direct and group conversations, private per-user notes, participant-scoped messages, unread counts, and a draggable notification bell. Its controllers, services, middleware, routes, migrations, models, views, and assets live in the package.
 
 > **Notification delivery:** The bell polls the package endpoint every five seconds while the page is visible. Sound is opt-in because browsers require a user gesture before playing audio. This does not require a separate WebSocket service.
 
@@ -12,7 +12,7 @@
 
 ## Installation
 
-Install the package from Packagist in the Laravel application's root directory:
+Install the package in the Laravel application's root directory:
 
 ```sh
 composer require kybdev/laravel-chat-component
@@ -72,10 +72,10 @@ The connection name can be changed with `CHAT_DB_CONNECTION` in the environment 
 The service provider automatically loads the package migrations. Run them against the configured chat connection:
 
 ```sh
-php artisan migrate --database=chat
+php artisan migrate --database=chat --path=vendor/kybdev/laravel-chat-component/database/migrations
 ```
 
-If you changed `CHAT_DB_CONNECTION`, use that connection name instead of `chat`. The migrations create:
+The explicit migration path ensures only package tables are created on the chat connection instead of running the host application's migrations there too. If you changed `CHAT_DB_CONNECTION`, use that connection name instead of `chat`. The migrations create:
 
 - `chat_conversations`
 - `chat_participants`
@@ -87,7 +87,7 @@ The package models and migrations use `chat.database.connection` for their conne
 
 ## Authentication and user resolution
 
-The default route middleware is `web,auth`. Users must be authenticated to access the web routes. When storing a message, the package's `EnsureChatUser` middleware resolves the current user and returns HTTP 401 if it cannot find one.
+The default route middleware is `web,auth` and the package's `EnsureAuthenticatedChatUser`. Every package endpoint requires an authenticated Laravel guard user; development request attributes alone do not grant access. The package's `EnsureChatUser` also resolves the current user when storing a message.
 
 The default resolver, `Vendor\LaravelChat\Support\DefaultChatUserResolver`, tries Laravel's authenticated user first, then the request's user, and then user identifiers in request `user` or `acl` attributes. When resolving an identifier from request attributes, it loads the configured user model.
 
@@ -98,7 +98,15 @@ CHAT_USER_MODEL=App\Models\User
 CHAT_AUTH_RESOLVER=App\Chat\MyChatUserResolver
 ```
 
-The selected user model must have a primary key compatible with the package's unsigned-big-integer `user_id` columns. The chat tables do not create foreign keys to the host application's users table.
+Set `CHAT_USER_MODEL` to the host application's authenticatable Eloquent model. The selected model must have a primary key compatible with the package's unsigned-big-integer `user_id` columns. The chat tables do not create foreign keys to the host application's users table.
+
+## User search and conversations
+
+The Messages page searches the configured user model's available `name`, `first_name`, `last_name`, `username`, and `email` columns. It returns at most 20 matches and excludes the current user. Starting a direct conversation reuses an existing conversation with the same two participants.
+
+Create a group by selecting at least two other users and a group name. The creator is added as owner; only that owner can add members later. Groups support up to 50 participants.
+
+The first time a user opens Messages, the package creates a private **My Notes** conversation. It contains only that user's participant record and is pinned first in that user's list.
 
 ## Add the floating notification bell to the host layout
 
@@ -123,10 +131,16 @@ The default route prefix is `messages`, configurable with `CHAT_ROUTE_PREFIX`.
 | GET | `/messages` | `chat.index` | Renders the messages page and conversation list. |
 | GET | `/messages/assets/chat.css` | `chat.assets.css` | Serves the package stylesheet. |
 | GET | `/messages/assets/chat.js` | `chat.assets.js` | Serves the page and notification-widget JavaScript. |
+| GET | `/messages/assets/workspace.js` | `chat.assets.workspace.js` | Serves the package conversation-management UI. |
 | GET | `/messages/updates` | `chat.updates` | Returns unread counts and incoming messages since the optional `since` timestamp. |
 | GET | `/messages/conversations` | `chat.conversations` | Lists the authenticated user's conversations and unread counts. |
 | GET | `/messages/conversations/{conversation}/messages` | `chat.messages` | Lists messages and marks the returned messages as read. |
 | POST | `/messages/messages` | `chat.store` | Stores a message in a conversation the user belongs to. |
+| GET | `/messages/users?q=...` | `chat.workspace.users` | Searches chat users. |
+| POST | `/messages/direct` | `chat.workspace.direct` | Creates or reuses a direct conversation. |
+| POST | `/messages/groups` | `chat.workspace.groups` | Creates a group with selected members. |
+| GET | `/messages/groups/{conversation}/members` | `chat.workspace.groups.members.index` | Lists group members for a participant. |
+| POST | `/messages/groups/{conversation}/members` | `chat.workspace.groups.members` | Adds members as the group owner. |
 | GET | `/api/messages/conversations` | `chat.api.conversations` | API route for listing conversations. |
 | POST | `/api/messages/messages` | `chat.api.store` | API route for storing a message in a conversation the user belongs to. |
 
@@ -146,11 +160,11 @@ Successful message creation returns HTTP 201 with a JSON `message` object. The a
 
 ### Route middleware
 
-`CHAT_ROUTE_MIDDLEWARE` is a comma-separated list of middleware names and defaults to `web,auth`. The package applies this same setting to both its web and API route groups. Change it only if the selected middleware is suitable for both groups; the package does not currently provide separate web/API middleware configuration. For API-token authentication, configure and test the application's middleware deliberately before enabling these endpoints.
+Routes default to `web`, `auth`, and the package's authenticated-user middleware. Configure host-specific guards and user resolution in the published `config/chat.php`; do not remove the authenticated-user check.
 
 ## Creating conversations
 
-There is no HTTP endpoint for creating conversations. Host application code can use the package service and models to create a conversation and add participants:
+Host application code can use the package service and models to create conversations and add participants:
 
 ```php
 use Vendor\LaravelChat\Services\ConversationService;
@@ -197,11 +211,11 @@ The default settings are in `config/chat.php`:
 | `database.migrations` | `CHAT_MIGRATIONS_PATH` | `database/migrations` | Present in config, but not currently used to select the package migration path. |
 | `database.table_prefix` | `CHAT_TABLE_PREFIX` | `chat_` | Present in config; table names are currently hard-coded as `chat_*`. |
 | `auth.mode` | `CHAT_AUTH_MODE` | `auto` | Reserved setting; resolution currently uses the configured resolver. |
-| `auth.guard` | `CHAT_AUTH_GUARD` | `web` | The route middleware is configured separately with `CHAT_ROUTE_MIDDLEWARE`. |
+| `auth.guard` | `CHAT_AUTH_GUARD` | `web` | Guard used by the package authenticated-user middleware. |
 | `auth.resolver` | `CHAT_AUTH_RESOLVER` | `Vendor\LaravelChat\Support\DefaultChatUserResolver` | Class used by `EnsureChatUser` to resolve the current user. |
 | `auth.user_model` | `CHAT_USER_MODEL` | Laravel's configured user model | Used when resolving a user ID from request attributes and for message author relations. |
 | `routes.prefix` | `CHAT_ROUTE_PREFIX` | `messages` | Prefix for the package's web and API URLs. |
-| `routes.middleware` | `CHAT_ROUTE_MIDDLEWARE` | `web,auth` | Comma-separated middleware shared by both route groups. |
+| `routes.middleware` | published config | `web,auth,EnsureAuthenticatedChatUser` | Middleware shared by the web and API groups. Keep an authenticated-user check in this list. |
 | `storage.disk` | `CHAT_STORAGE_DISK` | `local` | Reserved setting; attachment uploads are not implemented. |
 | `storage.max_size_kb` | `CHAT_STORAGE_MAX_SIZE_KB` | `10240` | Reserved setting; attachment uploads are not implemented. |
 | `notifications.enabled` | `CHAT_NOTIFICATIONS_ENABLED` | `true` | Reserved setting; notification delivery is not implemented. |
@@ -211,14 +225,14 @@ The default settings are in `config/chat.php`:
 
 ## Current limitations
 
-- The package does not expose HTTP routes to create conversations or manage participants. Create them through host application code.
-- The page and message endpoints check conversation membership, but host applications should still review route middleware and user-resolution configuration before deployment.
+- Direct/group conversation creation and group member additions are available through the package's protected workspace routes.
+- The page and message endpoints check conversation membership. Group creation is limited to the creator for adding members.
 - Attachments are not uploaded or persisted. The page currently sends text messages only.
 - Notifications use five-second polling while the page is visible; the package does not broadcast over WebSockets.
 - The `chat_notifications` table and notification/realtime configuration values are scaffolding and are not used by the polling widget.
 - Table prefix and migration-path settings are present in the config file but are not currently applied.
 
-Conversation membership management and any application-specific authorization rules remain the host application's responsibility.
+Host-specific user models, guards, and database connections are configured by the application in `config/chat.php` and `config/database.php`.
 
 ## Local package development
 
