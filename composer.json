@@ -1,5 +1,5 @@
 {
-    "name": "vendor/laravel-chat-component",
+    "name": "kybdev/laravel-chat-component",
     "description": "Reusable Laravel chat package designed for multi-application integration.",
     "type": "library",
     "license": "MIT",
