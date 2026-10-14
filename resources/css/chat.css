@@ -1,0 +1,13 @@
+.laravel-chat-shell {
+    max-width: 960px;
+    margin: 2rem auto;
+    font-family: sans-serif;
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 1px solid #dbe4ee;
+    background: #f8fafc;
+}
+
+.laravel-chat-shell h1 {
+    margin-bottom: 0.5rem;
+}
